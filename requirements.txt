@@ -1,0 +1,5 @@
+yfinance==0.2.66
+pandas
+numpy
+scikit-learn
+sqlalchemy
