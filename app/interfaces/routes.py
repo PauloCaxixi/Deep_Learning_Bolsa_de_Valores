@@ -191,3 +191,48 @@ async def ui_predict(request: Request, symbol: str = Form(...), horizon: int = F
     except Exception as e:
         # show friendly error page (and log trace in server console)
         return templates.TemplateResponse("needs_training.html", {"request": request, "symbol": symbol, "error": str(e)})
+
+
+@router.get("/history")
+async def history(symbol: str, limit: int = 60):
+    """
+    Return the last `limit` close prices for a symbol as JSON.
+    Example: /v1/history?symbol=AAPL&limit=60
+    """
+    try:
+        info = __import__("app.domain.entities.information", fromlist=["Info"]).Info(symbol, None, None)
+        df = GetData(info).QueryDf()
+        if df is None or df.empty:
+            return JSONResponse(status_code=404, content={"detail": "No data for symbol"})
+
+        closes_series = extract_close_series(df)
+        if closes_series is None:
+            return JSONResponse(status_code=500, content={"detail": "Close column not found"})
+
+        # df index may be Date index; ensure we output dates + closes
+        # If DataFrame has a DatetimeIndex, reset index for dates
+        series_df = df.reset_index()[["Date"]] if "Date" in df.reset_index().columns else None
+
+        # construct list of {date, close}
+        rows = []
+        # use the df we fetched (reset_index to ensure Date is a column)
+        df2 = df.reset_index()
+        # find appropriate 'Close' column name
+        close_col = None
+        for col in df2.columns:
+            if "Close" in str(col):
+                close_col = col
+                break
+        if close_col is None:
+            return JSONResponse(status_code=500, content={"detail":"Could not find Close column"})
+
+        # take last `limit` rows
+        tail = df2.tail(limit)
+        for _, r in tail.iterrows():
+            # Date may be pd.Timestamp -> convert to ISO date string
+            d = r["Date"]
+            date_str = d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)
+            rows.append({"date": date_str, "close": float(r[close_col])})
+        return {"symbol": symbol, "history": rows}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
