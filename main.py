@@ -1,8 +1,9 @@
+# main.py
 from fastapi import FastAPI
-from app.interfaces.routes import router as api_router  # <— note the "app."
+from app.interfaces.routes import router as api_router
 
 def create_app() -> FastAPI:
-    app = FastAPI()
+    app = FastAPI(title="Tech Challenge - Stock LSTM")
     app.include_router(api_router, prefix="/v1")
     return app
 

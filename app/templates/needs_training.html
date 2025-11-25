@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Action required - Train model</title>
+</head>
+<body>
+  <h1>Model missing or error</h1>
+  <p>Symbol: <strong>{{ symbol }}</strong></p>
+  {% if error %}
+    <p style="color:darkred">Error: {{ error }}</p>
+  {% endif %}
+  <p>This UI does not train models directly. Please train the model first via the API docs:</p>
+  <ul>
+    <li><a href="/docs">Open API docs (Swagger)</a></li>
+    <li>In Swagger, execute <strong>POST /v1/train</strong> with the symbol and a start date (e.g. 2018-01-01)</li>
+  </ul>
+  <p>After training completes, return here and request prediction again.</p>
+  <p><a href="/">Back to UI</a></p>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>AI Stock Predictor</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #0a0f1f, #1c2b4a);
+            color: white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 32px;
+            border-radius: 16px;
+            width: 420px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 24px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        h1 {
+            margin-bottom: 12px;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            background:#27a4ff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        button:hover {
+            background:#0c7fd0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+
+        <h1>📈 AI Stock Price Predictor</h1>
+        <p>Type a stock symbol and get future price predictions using LSTM neural networks.</p>
+
+        <form action="/v1/ui/predict" method="post">
+
+            <input name="symbol" placeholder="Example: AAPL, PETR4.SA" required />
+
+            <input name="horizon" type="number" value="1" min="1" max="30" />
+
+            <input name="window" type="number" value="60" min="10" max="200" />
+
+            <button type="submit">Predict Price</button>
+        </form>
+    </div>
+</body>
+</html>

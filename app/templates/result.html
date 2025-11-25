@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Prediction Result</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f152b, #1c345a);
+            color: white;
+            font-family: "Segoe UI", sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.08);
+            padding: 30px;
+            border-radius: 18px;
+            width: 440px;
+            text-align: center;
+            box-shadow: 0px 0px 24px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        h1 { margin-bottom: 8px; }
+        p { margin: 8px 0; }
+
+        .value-box {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.18);
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        a {
+            color: #22a8ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        a:hover { text-decoration: underline; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="card">
+    <h1>📊 Prediction Result</h1>
+
+    <p><strong>Symbol:</strong> {{ symbol }}</p>
+
+    <div class="value-box">
+        Predicted Close Price:<br>
+        {{ predictions[0] }}
+    </div>
+
+    <p style="margin-top:20px;">
+        <a href="/v1/">← Back to predictor</a>
+    </p>
+</div>
+
+</body>
+</html>
