@@ -1,0 +1,2 @@
+docker build -t lstm-api .
+docker run -p 5000:5000 lstm-api

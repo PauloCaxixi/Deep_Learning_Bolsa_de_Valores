@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Financeiro - Previsão de Ações</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+        .form-label {
+            font-weight: 600;
+        }
+        .btn-primary {
+            width: 100%;
+            font-weight: bold;
+        }
+        .plot-img {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+        .metrics {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .metrics span {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card p-4">
+                    <h3 class="mb-4 text-center">📊 Painel Financeiro - Previsão de Ações com LSTM</h3>
+
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="POST" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="symbol" class="form-label">Símbolo da ação</label>
+                                <input type="text" id="symbol" name="symbol" class="form-control" placeholder="Ex: VALE3.SA" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="start_date" class="form-label">Data inicial</label>
+                                <input type="date" id="start_date" name="start_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_date" class="form-label">Data final</label>
+                                <input type="date" id="end_date" name="end_date" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">🔍 Treinar e Prever</button>
+                        </div>
+                    </form>
+
+                    {% if prediction and plot_exists and plot_url %}
+                        <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="text-success">💰 Preço previsto: R$ {{ prediction }}</h5>
+                            <div class="metrics mt-3">
+                            <span><strong>Último preço:</strong> R$ {{ last_price }}</span>
+                            <span><strong>Volume:</strong> {{ volume }}</span>
+                            <span><strong>Abertura:</strong> R$ {{ open_price }}</span>
+                            <span><strong>Máxima:</strong> R$ {{ high }}</span>
+                            <span><strong>Mínima:</strong> R$ {{ low }}</span>
+                            {% if pe_ratio %}<span><strong>P/E Ratio:</strong> {{ pe_ratio }}</span>{% endif %}
+                            {% if dividend_yield %}<span><strong>Dividend Yield:</strong> {{ dividend_yield }}%</span>{% endif %}
+                            {% if target_price %}<span><strong>Preço-Alvo 1Y:</strong> R$ {{ target_price }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <img src="{{ plot_url }}" alt="Gráfico de Previsão" class="plot-img mt-2">
+                        </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
