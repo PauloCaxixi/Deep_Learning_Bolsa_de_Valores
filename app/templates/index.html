@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
-    <title>AI Stock Predictor</title>
+    <title>Previsor de Ações com IA</title>
     <style>
         body { margin:0; padding:0; font-family: "Segoe UI", sans-serif; background: linear-gradient(135deg,#081026,#12314a); color:#fff; height:100vh; display:flex; justify-content:center; align-items:center; }
         .card { background: rgba(255,255,255,0.06); padding:28px; border-radius:14px; width:480px; text-align:left; backdrop-filter: blur(6px); box-shadow:0 10px 30px rgba(0,0,0,0.6); }
@@ -24,29 +24,31 @@
                 <img class="logo" src="{{ logo_path }}" alt="logo"/>
             {% endif %}
             <div>
-                <h1>AI Stock Price Predictor</h1>
-                <p class="desc">Predict next closing prices using an LSTM model. Train via <a style="color:#9fe1ff" href="/docs">/docs</a> if needed.</p>
+                <h1>Previsor de Preços de Ações com IA</h1>
+                <p class="desc">Prevê os próximos preços de fechamento usando um modelo LSTM. Treine via <a style="color:#9fe1ff" href="/docs">/docs</a> se necessário.</p>
             </div>
         </div>
 
         <form action="/v1/ui/predict" method="post">
-            <label>Symbol
-                <input name="symbol" type="text" placeholder="e.g. AAPL or PETR4.SA" required />
+            
+            <label>Símbolo (Ticker)
+                <input name="symbol" type="text" placeholder="ex: AAPL ou PETR4.SA" required />
             </label>
-            <div class="hint">Ticker symbol (exchange suffix optional). Example for B3 Brazil: <em>PETR4.SA</em></div>
+            <div class="hint">Símbolo da ação (sufixo de bolsa opcional). Exemplo para B3 Brasil: <em>PETR4.SA</em></div>
 
-            <label>Horizon (days to predict)
+            <label>Horizonte (dias a prever)
                 <input name="horizon" type="number" value="1" min="1" max="30" />
             </label>
-            <div class="hint">How many days ahead to predict. 1 = next market day.</div>
+            <div class="hint">Quantos dias à frente prever. 1 = próximo dia de mercado.</div>
 
-            <label>Window (history size)
+            <label>Janela (tamanho do histórico)
                 <input name="window" type="number" value="60" min="10" max="500" />
             </label>
-            <div class="hint">How many past closing prices the model uses as input. If not enough history exists, the system will automatically use the available data.</div>
+            <div class="hint">Quantos preços de fechamento passados o modelo usa como entrada. Se não houver histórico suficiente, o sistema usará automaticamente os dados disponíveis.</div>
 
-            <button type="submit">Predict</button>
-            <small class="note">Tip: If the UI asks you to train the model, open <a style="color:#9fe1ff" href="/docs">/docs</a> → POST /v1/train and run with a long start date (e.g. 2010-01-01).</small>
+            <button type="submit">Prever</button>
+            
+            <small class="note">Dica: Se a interface pedir para você treinar o modelo, abra <a style="color:#9fe1ff" href="/docs">/docs</a> → POST /v1/train e execute com uma data de início distante (ex: 2010-01-01).</small>
         </form>
     </div>
 </body>

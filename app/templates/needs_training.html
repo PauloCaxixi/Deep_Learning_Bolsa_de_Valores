@@ -1,14 +1,22 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>Model missing</title></head>
+<head>
+    <meta charset="utf-8">
+    <title>Modelo não Encontrado</title>
+</head>
 <body style="font-family:Segoe UI, sans-serif; background:#0e1b2a;color:#fff;padding:28px">
-  <h2>Model missing or error</h2>
-  <p>Symbol: <strong>{{ symbol }}</strong></p>
-  {% if error %}
-    <p style="color:#ffb3b3">Error: {{ error }}</p>
-  {% endif %}
-  <p>This UI does not train models directly. Please train the model first via <a href="/docs">the API docs</a> (POST /v1/train).</p>
-  <p>Use a long start date (e.g. 2010-01-01) to collect a large history if you want window=60 or more.</p>
-  <p><a href="/v1/">Back</a></p>
+    <h2>Modelo Ausente ou Erro</h2>
+    
+    <p>Símbolo: <strong>{{ symbol }}</strong></p>
+    
+    {% if error %}
+        <p style="color:#ffb3b3">Erro: {{ error }}</p>
+    {% endif %}
+    
+    <p>Esta interface não treina modelos diretamente. Por favor, treine o modelo primeiro através <a href="/docs">da documentação da API</a> (POST /v1/train).</p>
+    
+    <p>Use uma data de início distante (ex: 2010-01-01) para coletar um histórico grande se você desejar uma janela (window) de 60 ou mais.</p>
+    
+    <p><a href="/v1/">Voltar</a></p>
 </body>
 </html>
