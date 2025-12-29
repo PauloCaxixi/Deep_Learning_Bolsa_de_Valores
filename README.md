@@ -36,7 +36,7 @@ Instale todas as bibliotecas necessárias, incluindo TensorFlow, FastAPI, Uvicor
 Bash
 
 # Instala as bibliotecas de ML, API e MLOps
-pip install tensorflow keras numpy pandas scikit-learn fastapi uvicorn[standard]
+pip install -r requirments.txt
 
 
 Estrutura do Projeto
@@ -69,7 +69,7 @@ Bash
 
 python main.py
 
-O servidor estará disponível em: http://0.0.0.0:8000 ou http://localhost:8000
+O servidor estará disponível em: http://localhost:8000
 
 
 🧠 Fluxo de Trabalho (Como Usar)
@@ -96,7 +96,7 @@ JSON
   "epochs": 15
 }
 Passo 2: Fazer Previsão
-Acesse a interface em http://localhost:8000/.
+Acesse a interface em http://localhost:8000/v1.
 
 Digite o Symbol (o mesmo usado no treinamento).
 
