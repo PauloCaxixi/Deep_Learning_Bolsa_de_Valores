@@ -1,32 +1,47 @@
-# ======================================================
-# IMPORTAÇÕES
-# ======================================================
-
-# Manipulação de caminhos e arquivos no sistema operacional
 import os
-
-# Serialização de objetos Python (usado para salvar o scaler)
 import joblib
-
-# Operações matemáticas e vetoriais
 import numpy as np
-
-# Manipulação de dados em DataFrame
 import pandas as pd
+import time
+import logging
 
-# Normalização de dados para o intervalo [0, 1]
 from sklearn.preprocessing import MinMaxScaler
-
-# TensorFlow e Keras (deep learning)
 import tensorflow as tf
 from tensorflow.keras.models import load_model, Sequential
 from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.callbacks import Callback
 
-# Sistema de logs da aplicação
-import logging
-
-# Logger padrão do módulo
+# ======================================================
+# CONFIGURAÇÃO DE LOG
+# ======================================================
 log = logging.getLogger(__name__)
+
+# ======================================================
+# CALLBACK DE LOG POR EPOCH (MLOps friendly)
+# ======================================================
+class TrainingLogger(Callback):
+    """
+    Callback personalizado para logar métricas a cada epoch.
+    Não interfere no treinamento nem na API.
+    """
+
+    def on_train_begin(self, logs=None):
+        self.start_time = time.perf_counter()
+        log.info("Treinamento iniciado.")
+
+    def on_epoch_end(self, epoch, logs=None):
+        log.info(
+            "Epoch %d | loss=%.6f | mae=%.6f | val_loss=%.6f | val_mae=%.6f",
+            epoch + 1,
+            logs.get("loss"),
+            logs.get("mae"),
+            logs.get("val_loss"),
+            logs.get("val_mae"),
+        )
+
+    def on_train_end(self, logs=None):
+        elapsed = time.perf_counter() - self.start_time
+        log.info("Treinamento finalizado em %.2f segundos.", elapsed)
 
 
 # ======================================================
@@ -34,37 +49,19 @@ log = logging.getLogger(__name__)
 # ======================================================
 def create_sequences(values, window):
     """
-    Transforma uma série temporal em janelas deslizantes
-    para treinamento de redes LSTM.
-
-    Exemplo:
-    window = 3
-    values = [1,2,3,4,5]
-
-    X = [[1,2,3], [2,3,4]]
-    y = [4,5]
+    Converte uma série temporal em pares (X, y) para LSTM.
     """
-
-    # Listas que armazenarão as sequências de entrada (X)
-    # e os valores alvo (y)
     X, y = [], []
 
-    # Percorre os dados respeitando o tamanho da janela
     for i in range(window, len(values)):
-        # Janela de dados passados
         X.append(values[i - window:i, 0])
-
-        # Valor seguinte (o que o modelo deve prever)
         y.append(values[i, 0])
 
-    # Converte listas em arrays NumPy
     X = np.array(X)
     y = np.array(y)
 
-    # Redimensiona X para o formato esperado pela LSTM:
-    # (amostras, passos de tempo, features)
+    # Formato exigido pela LSTM: (amostras, janela, features)
     X = X.reshape((X.shape[0], X.shape[1], 1))
-
     return X, y
 
 
@@ -79,81 +76,99 @@ def train_and_save(
     batch_size: int = 32
 ):
     """
-    Treina um modelo LSTM com dados históricos
-    e salva o modelo e o scaler em disco.
+    Treina um modelo LSTM, loga métricas detalhadas
+    e salva o modelo e o scaler.
     """
-
-    log.info("Iniciando treinamento LSTM para %s", symbol)
+    total_start = time.perf_counter()
+    log.info("Iniciando pipeline de treinamento para %s", symbol)
 
     # --------------------------------------------------
-    # IDENTIFICA A COLUNA 'Close'
+    # 1. Localizar coluna Close
     # --------------------------------------------------
-    # Procura qualquer coluna que contenha a palavra "Close"
     close_col = next((c for c in df.columns if "Close" in str(c)), None)
-
     if close_col is None:
         raise ValueError("Coluna 'Close' não encontrada.")
 
-    # Extrai os preços de fechamento e converte para float32
     close = df[[close_col]].values.astype("float32")
+    log.info("Total de registros utilizados: %d", len(close))
 
     # --------------------------------------------------
-    # NORMALIZAÇÃO DOS DADOS
+    # 2. Normalização
     # --------------------------------------------------
     scaler = MinMaxScaler()
     scaled = scaler.fit_transform(close)
 
-    # Verificação de tamanho mínimo
     if len(scaled) <= window:
         raise ValueError(f"Dados insuficientes para janela {window}")
 
-    # Criação das sequências temporais
+    # --------------------------------------------------
+    # 3. Criação das sequências
+    # --------------------------------------------------
     X, y = create_sequences(scaled, window)
+    log.info("Sequências criadas | X=%s | y=%s", X.shape, y.shape)
 
     # --------------------------------------------------
-    # DIVISÃO TREINO / VALIDAÇÃO (80% / 20%)
+    # 4. Split treino / validação
     # --------------------------------------------------
     split = int(len(X) * 0.8)
     X_train, X_val = X[:split], X[split:]
     y_train, y_val = y[:split], y[split:]
 
+    log.info(
+        "Split de dados | treino=%d | validação=%d",
+        len(X_train), len(X_val)
+    )
+
     # --------------------------------------------------
-    # DEFINIÇÃO DO MODELO LSTM
+    # 5. Definição do modelo LSTM
     # --------------------------------------------------
-    # Uso explícito de Input para evitar warnings do Keras
     model = Sequential([
         tf.keras.Input(shape=(X_train.shape[1], 1)),
         LSTM(50, activation="tanh"),
         Dense(1)
     ])
 
-    # Compilação do modelo
     model.compile(
         optimizer="adam",
         loss="mse",
         metrics=["mae"]
     )
 
+    log.info("Modelo LSTM compilado com sucesso.")
+
     # --------------------------------------------------
-    # TREINAMENTO DO MODELO
+    # 6. Treinamento (COM LOGS POR EPOCH)
     # --------------------------------------------------
+    train_start = time.perf_counter()
+
     history = model.fit(
         X_train,
         y_train,
         validation_data=(X_val, y_val),
         epochs=epochs,
         batch_size=batch_size,
-        verbose=1
+        callbacks=[TrainingLogger()],
+        verbose=0  # logs ficam padronizados no logging
     )
 
+    train_time = time.perf_counter() - train_start
+
     # --------------------------------------------------
-    # EXTRAÇÃO DAS MÉTRICAS FINAIS
+    # 7. Métricas finais
     # --------------------------------------------------
     val_loss = history.history["val_loss"][-1]
     val_mae = history.history["val_mae"][-1]
 
+    log.info(
+        "Resumo final | epochs=%d | val_mae=%.6f | val_mse=%.6f | tempo=%.2fs",
+        epochs,
+        val_mae,
+        val_loss,
+        train_time
+    )
+
     # --------------------------------------------------
-    # SALVAMENTO DO MODELO E SCALER
+    # 8. Salvamento do modelo e scaler
     # --------------------------------------------------
     os.makedirs("app/models", exist_ok=True)
 
@@ -163,16 +178,24 @@ def train_and_save(
     model.save(model_path)
     joblib.dump(scaler, scaler_path)
 
+    total_time = time.perf_counter() - total_start
+
     log.info(
-        "Treinamento finalizado para %s | val_mae=%.6f | val_loss=%.6f",
-        symbol, val_mae, val_loss
+        "Pipeline completo finalizado para %s em %.2f segundos.",
+        symbol,
+        total_time
     )
 
-    # Retorno das métricas e caminho do modelo
+    # --------------------------------------------------
+    # 9. Retorno (API permanece compatível)
+    # --------------------------------------------------
     return {
         "model_path": model_path,
         "val_mae": float(val_mae),
-        "val_loss": float(val_loss)
+        "val_loss": float(val_loss),
+        "epochs": epochs,
+        "train_time_seconds": round(train_time, 2),
+        "total_time_seconds": round(total_time, 2)
     }
 
 
@@ -180,10 +203,6 @@ def train_and_save(
 # CARREGAMENTO DO MODELO
 # ======================================================
 def load_model_and_scaler(symbol: str):
-    """
-    Carrega o modelo LSTM treinado e o scaler correspondente.
-    """
-
     model_path = os.path.join("app", "models", f"{symbol}_lstm.keras")
     scaler_path = os.path.join("app", "models", f"{symbol}_scaler.joblib")
 
@@ -192,7 +211,6 @@ def load_model_and_scaler(symbol: str):
 
     model = load_model(model_path)
     scaler = joblib.load(scaler_path)
-
     return model, scaler
 
 
@@ -205,37 +223,33 @@ def forecast_from_series(
     horizon: int = 1,
     window: int = 60
 ):
-    """
-    Realiza previsões futuras com base em uma série
-    de preços de fechamento.
-    """
-
-    # Carrega modelo e scaler
     model, scaler = load_model_and_scaler(symbol)
 
-    # Converte lista em array e normaliza
     arr = np.array(closes, dtype="float32").reshape(-1, 1)
     scaled = scaler.transform(arr)
 
-    # Última janela usada como entrada inicial
     seq = scaled[-window:].reshape(1, window, 1)
 
     preds = []
     current_seq = seq.copy()
 
-    # Previsão recursiva (multi-step)
+    start = time.perf_counter()
+
     for _ in range(horizon):
         p = model.predict(current_seq, verbose=0)[0, 0]
         preds.append(p)
-
-        # Insere a nova previsão no fim da sequência
         new_val = np.array(p).reshape(1, 1, 1)
         current_seq = np.concatenate(
             [current_seq[:, 1:, :], new_val],
             axis=1
         )
 
-    # Desnormaliza as previsões
+    elapsed = time.perf_counter() - start
+    log.info(
+        "Inferência concluída | symbol=%s | horizon=%d | tempo=%.4fs",
+        symbol, horizon, elapsed
+    )
+
     preds = np.array(preds).reshape(-1, 1)
     preds_inv = scaler.inverse_transform(preds).reshape(-1).tolist()
 
