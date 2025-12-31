@@ -1,61 +1,113 @@
+# ==========================================
 # app/application/get_data.py
+# ==========================================
 
-# --- IMPORTS DE INFRAESTRUTURA E DOMÍNIO ---
-# Biblioteca para baixar dados financeiros (a fonte externa de dados).
+# --- IMPORTAÇÕES ---
+
+# Biblioteca que acessa dados financeiros do Yahoo Finance
 import yfinance as yf
-# Biblioteca para manipulação e estruturação dos dados (DataFrame).
+
+# Biblioteca usada para trabalhar com tabelas de dados (DataFrame)
 import pandas as pd
-# Importa a entidade 'Info' da camada de domínio, que contém o que deve ser consultado.
+
+# Importa a entidade Info da camada de domínio
+# Ela contém as informações necessárias para a consulta (símbolo e datas)
 from ..domain.entities.information import Info
 
-# --- CLASSE DE SERVIÇO DE DADOS ---
+
+# ==========================================
+# CLASSE GetData
+# ==========================================
+
 class GetData:
     """
-    Serviço da Camada de Aplicação responsável por obter dados 
-    históricos de preços de ações usando yfinance.
+    Classe da camada de Aplicação responsável por buscar
+    dados históricos de ações usando o Yahoo Finance (yfinance).
     """
-    
+
     def __init__(self, info: Info):
         """
-        Construtor. Recebe a Entidade 'Info' e extrai os parâmetros de consulta.
-        
-        :param info: Objeto da camada de Domínio contendo o símbolo e as datas.
+        Construtor da classe.
+
+        Recebe um objeto Info (camada de domínio) e extrai
+        os parâmetros necessários para a consulta.
+
+        :param info: Objeto Info contendo símbolo, data inicial e final
         """
-        # Armazena os parâmetros de consulta.
+
+        # Símbolo da ação (ex: AAPL, PETR4.SA)
         self.symbol = info.symbol
+
+        # Data inicial da consulta (pode ser None)
         self.start = info.start_date
+
+        # Data final da consulta (pode ser None)
         self.end = info.end_date
+
 
     def QueryDf(self) -> pd.DataFrame:
         """
-        Executa a consulta no yfinance e retorna um DataFrame do Pandas 
-        com os dados históricos de preço.
+        Executa a consulta no Yahoo Finance e retorna
+        um DataFrame do Pandas com os dados históricos.
         """
-        # Se 'start' for None, o yfinance usa o parâmetro 'period'.
+
         try:
+            # ------------------------------------------------
+            # CASO 1: Datas de início e fim foram informadas
+            # (Normalmente usado no treinamento do modelo)
+            # ------------------------------------------------
             if self.start:
-                # Se as datas de início/fim foram fornecidas (uso pelo /train), 
-                # baixa o histórico no período específico.
-                # auto_adjust=True: ajusta automaticamente para splits de ações, etc.
-                df = yf.download(self.symbol, start=self.start, end=self.end, auto_adjust=True)
+                # Baixa dados do período específico
+                # auto_adjust=True ajusta automaticamente preços
+                # para eventos como split de ações
+                df = yf.download(
+                    self.symbol,
+                    start=self.start,
+                    end=self.end,
+                    auto_adjust=True
+                )
+
+            # ------------------------------------------------
+            # CASO 2: Nenhuma data foi informada
+            # (Usado em previsão ou histórico)
+            # ------------------------------------------------
             else:
-                # Se nenhuma data for fornecida (uso pelo /predict ou /history), 
-                # baixa um período recente padrão (cerca de 3 anos) para garantir dados suficientes.
-                df = yf.download(self.symbol, period="720d", auto_adjust=True)
-            
-            # Verificação básica se a consulta falhou.
+                # Baixa um período padrão recente (720 dias ≈ 2 anos)
+                # Garante que haja dados suficientes para previsão
+                df = yf.download(
+                    self.symbol,
+                    period="720d",
+                    auto_adjust=True
+                )
+
+            # ------------------------------------------------
+            # Verificação básica de erro
+            # ------------------------------------------------
+            # Se por algum motivo o retorno for None,
+            # devolve um DataFrame vazio
             if df is None:
                 return pd.DataFrame()
-            
-            # Remove linhas com valores ausentes (NaN) após o download.
-            # Isso garante que a série de preços esteja limpa antes de ser usada pelo ML.
+
+            # ------------------------------------------------
+            # Limpeza dos dados
+            # ------------------------------------------------
+            # Remove linhas com valores ausentes (NaN)
+            # Isso evita erros nos cálculos do modelo de ML
             df = df.dropna()
-            
-            # Retorna o DataFrame limpo. 
+
+            # Retorna o DataFrame pronto para uso
             return df
-            
+
         except Exception as e:
-            # Em caso de qualquer erro (ex: símbolo inválido, problema de conexão),
-            # retorna um DataFrame vazio. O chamador (ex: /train ou /predict) 
-            # é responsável por lidar com esse erro.
+            # ------------------------------------------------
+            # Tratamento de erro
+            # ------------------------------------------------
+            # Se ocorrer qualquer erro:
+            # - símbolo inválido
+            # - falha de conexão
+            # - erro inesperado
+            #
+            # Retorna um DataFrame vazio
+            # A camada que chamou (ex: /train ou /predict)
+            # decide como lidar com isso
             return pd.DataFrame()

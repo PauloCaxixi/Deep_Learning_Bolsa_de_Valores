@@ -1,47 +1,55 @@
-# 📈 AI Stock Price Predictor (Previsor de Preço de Ações com LSTM)
+📈 AI Stock Price Predictor
 
-Este é um projeto de Machine Learning (MLOps) que utiliza uma Rede Neural Recorrente (LSTM) para prever o preço de fechamento de ações, servido através de uma API REST robusta construída com FastAPI. O sistema inclui um pipeline de treinamento, inferência e monitoramento de desempenho.
+Previsor de Preço de Ações com LSTM e FastAPI
 
-## ✨ Tecnologias Principais
+Este projeto implementa uma solução completa de Machine Learning aplicada à previsão de preços de ações, utilizando uma Rede Neural Recorrente do tipo LSTM (Long Short-Term Memory), exposta por meio de uma API REST desenvolvida com FastAPI.
 
-* **Framework:** FastAPI
-* **Modelo de ML:** TensorFlow/Keras (LSTM - Long Short-Term Memory)
-* **Estrutura de Dados:** Pandas
-* **Coleta de Dados:** `yfinance`
-* **Monitoramento:** Prometheus (Métricas de Latência e Contagem)
-* **Logging:** Módulo `logging` do Python para rastreamento de eventos e erros.
+A aplicação cobre todo o ciclo de vida do modelo (treinamento, persistência, inferência e monitoramento), seguindo boas práticas de MLOps e uma arquitetura em camadas.
 
-## 🚀 Como Executar o Projeto Localmente
+✨ Tecnologias Utilizadas
 
-Siga estes passos para configurar e executar o projeto no seu ambiente.
+API Framework: FastAPI
 
-### 1. Configuração do Ambiente Virtual
+Servidor ASGI: Uvicorn
 
-É crucial usar um ambiente virtual para gerenciar as dependências corretamente (especialmente o TensorFlow).
+Machine Learning: TensorFlow / Keras (LSTM)
 
-```bash
-# Cria o ambiente virtual chamado 'tf_env'
-python -m venv tf_env 
+Processamento de Dados: Pandas, NumPy
 
-# Ativa o ambiente virtual (Windows PowerShell)
+Coleta de Dados Financeiros: yfinance
+
+Normalização: MinMaxScaler (scikit-learn)
+
+Persistência de Modelos: .keras + joblib
+
+Monitoramento: Prometheus
+
+Logging: Módulo logging do Python
+
+🚀 Execução Local do Projeto
+1️⃣ Criação do Ambiente Virtual
+
+O uso de ambiente virtual é fortemente recomendado, especialmente devido às dependências do TensorFlow.
+
+# Criação do ambiente virtual
+python -m venv tf_env
+
+# Ativação (Windows PowerShell)
 .\tf_env\Scripts\Activate
 
-# (Ou no Linux/macOS)
-# source tf_env/bin/activate
+# Ativação (Linux/macOS)
+source tf_env/bin/activate
+
+2️⃣ Instalação das Dependências
+
+Instale todas as bibliotecas necessárias:
+
+pip install -r requirements.txt
 
 
-Instalação das Dependências
-Instale todas as bibliotecas necessárias, incluindo TensorFlow, FastAPI, Uvicorn e Prometheus.
+⚠️ Certifique-se de que o arquivo se chame corretamente requirements.txt.
 
-Bash
-
-# Instala as bibliotecas de ML, API e MLOps
-pip install -r requirments.txt
-
-
-Estrutura do Projeto
-Certifique-se de que a estrutura de pastas esteja correta:
-
+📂 Estrutura do Projeto
 Tech_Challenge_4/
 ├── main.py
 ├── app/
@@ -49,44 +57,54 @@ Tech_Challenge_4/
 │   │   ├── index.html
 │   │   ├── needs_training.html
 │   │   └── result.html
-│   ├── models/  <-- Modelos e Scalers salvos aqui após o treino
-│   ├── application/
+│   ├── models/                # Modelos LSTM e scalers salvos
+│   ├── application/           # Camada de aplicação
 │   │   ├── __init__.py
 │   │   ├── get_data.py
 │   │   └── train_model.py
-│   ├── domain/
+│   ├── domain/                # Camada de domínio
 │   │   ├── __init__.py
 │   │   └── entities/
 │   │       └── information.py
-│   └── interfaces/
+│   └── interfaces/            # Camada de interfaces (API)
 │       └── routes.py
 
 
-Iniciando o Servidor
-Com o ambiente ativado, inicie o servidor FastAPI/Uvicorn:
+A estrutura segue uma arquitetura em camadas, separando responsabilidades de forma clara.
 
-Bash
+▶️ Iniciando o Servidor
+
+Com o ambiente virtual ativado, execute:
 
 python main.py
 
-O servidor estará disponível em: http://localhost:8000
+
+ou
+
+uvicorn main:app --reload
 
 
-🧠 Fluxo de Trabalho (Como Usar)
-Passo 1: Treinar o Modelo
-Antes de prever, você deve treinar o modelo para o símbolo desejado (ex: PETR4.SA ou AAPL).
+A aplicação estará disponível em:
 
-Acesse http://localhost:8000/docs.
+http://localhost:8000
 
-Expanda o endpoint POST /v1/train.
 
-Preencha o Request body com os parâmetros desejados (o padrão é geralmente um bom ponto de partida).
+A documentação interativa da API pode ser acessada em:
 
-Clique em "Execute".
+http://localhost:8000/docs
 
-Exemplo de Payload:
+🧠 Fluxo de Uso da Aplicação
+🔹 Passo 1 — Treinamento do Modelo
 
-JSON
+Antes de realizar previsões, é necessário treinar o modelo para o ativo desejado.
+
+Acesse /docs
+
+Utilize o endpoint POST /v1/train
+
+Informe os parâmetros de treinamento
+
+Exemplo de payload:
 
 {
   "symbol": "AAPL",
@@ -95,46 +113,81 @@ JSON
   "window": 60,
   "epochs": 15
 }
-Passo 2: Fazer Previsão
-Acesse a interface em http://localhost:8000/v1.
 
-Digite o Symbol (o mesmo usado no treinamento).
 
-Clique em Predict.
+O modelo treinado e o scaler correspondente são automaticamente salvos em app/models.
 
-A API carregará o modelo salvo e o scaler, consultará os dados históricos recentes e fará a previsão.
+🔹 Passo 2 — Realizar Previsão
+
+Acesse http://localhost:8000/v1
+
+Informe o symbol previamente treinado
+
+Clique em Predict
+
+A API carregará o modelo salvo, buscará os dados históricos recentes e retornará a previsão de preço.
 
 📊 Monitoramento e Logging (MLOps)
-Este projeto utiliza duas abordagens de monitoramento:
+1️⃣ Métricas com Prometheus
 
-1. Prometheus Metrics (Métricas de Desempenho)
-O endpoint /v1/metrics expõe métricas de latência e contagem de requisições, que podem ser coletadas por um servidor Prometheus (e visualizadas em um dashboard Grafana) para monitorar a saúde da API em tempo real.
+O endpoint /v1/metrics expõe métricas para monitoramento em tempo real:
 
-Contagem: app_requests_total
+Contagem de Requisições: app_requests_total
 
 Latência: app_request_latency_seconds
 
-2. Logging (Rastreamento de Eventos e Erros)
-O módulo logging do Python registra eventos importantes no console, facilitando a depuração e o rastreamento do fluxo de dados:
+Essas métricas podem ser coletadas por um servidor Prometheus e visualizadas via Grafana.
 
-Treinamento: Informações sobre o carregamento de dados, início/fim do model.fit e métricas finais (MAE/MSE).
+2️⃣ Logging de Eventos
 
-Previsão: Tempo de inferência e os valores previstos.
+O sistema utiliza o módulo logging para rastreamento detalhado:
 
-Erros: Captura Exceptions e HTTPExceptions com detalhes, usando log.error().
+Treinamento: início/fim do treino, métricas finais (MAE e Loss)
 
-🛑 Notas de Implementação
-LSTM: O modelo utiliza uma camada LSTM de 50 unidades e é treinado para regressão (prever um valor numérico contínuo).
+Inferência: tempo de execução e valores previstos
 
-Escalonamento: O MinMaxScaler é crucial para normalizar os dados antes do treinamento e desnormalizar as previsões, sendo salvo junto com o modelo usando joblib.
+Erros: exceções capturadas com log.error
 
-Estrutura de Arquitetura: O projeto segue vagamente uma arquitetura em camadas, separando Interfaces (rotas), Aplicação (lógica de ML e dados) e Domínio (entidades).
+🛠️ Notas Técnicas de Implementação
+
+Modelo LSTM
+
+Uma camada LSTM com 50 unidades
+
+Função de ativação tanh
+
+Saída contínua para regressão
+
+Normalização
+
+MinMaxScaler aplicado antes do treinamento
+
+Scaler salvo junto com o modelo
+
+Persistência
+
+Modelo salvo em formato .keras
+
+Scaler salvo via joblib
+
+Arquitetura
+
+Interfaces (rotas / API)
+
+Aplicação (lógica de ML e dados)
+
+Domínio (entidades de negócio)
 
 🤝 Contribuição
-Sinta-se à vontade para abrir issues ou enviar pull requests para melhorias, como:
 
-Adicionar suporte a mais modelos (ex: Prophet, ARIMA).
+Contribuições são bem-vindas. Exemplos de melhorias futuras:
 
-Implementar autenticação na API.
+Suporte a múltiplos modelos (Prophet, ARIMA, XGBoost)
 
-Otimizar o desempenho do train_model.py.
+Autenticação e controle de acesso na API
+
+Otimização de hiperparâmetros
+
+Cache de previsões
+
+Pipeline CI/CD para automação de treinamento
